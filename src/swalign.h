@@ -24,12 +24,13 @@
  */
 
 #include <float.h>
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define GAP -2
+#define GAP -1
 #define MATCH 1
 #define MISMATCH 0
 
@@ -44,7 +45,7 @@ typedef struct {
 typedef seq_pair *seq_pair_t;
 
 typedef struct {
-  double score;
+    int score;
   unsigned int prev[2];
 } entry;
 typedef entry *entry_t;
