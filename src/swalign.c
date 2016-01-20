@@ -293,7 +293,7 @@ int main(int argc, const char **argv) {
         //printf("%s\n%s\n", result->a, result->b);
 
         max_score = fast_smith_waterman(&problem, false);
-        printf("%i", max_score);
+        printf("%i\n", max_score);
     }
 
     exit(0);
