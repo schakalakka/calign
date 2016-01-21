@@ -23,7 +23,9 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <Python.h>
 #include "swalign.h"
+
 
 /* reverse a string in place, return str */
 static char *reverse(char *str) {
@@ -231,7 +233,7 @@ static seq_pair_t smith_waterman(seq_pair_t problem, bool local) {
     return result;
 }
 
-static seq_pair_t fast_smith_waterman(seq_pair_t problem, bool local) {
+static int fast_smith_waterman(seq_pair_t problem, bool local) {
     unsigned int n = problem->alen + 1;
     unsigned int m = problem->blen + 1;
     int max_score;
@@ -266,6 +268,50 @@ static seq_pair_t fast_smith_waterman(seq_pair_t problem, bool local) {
     return max_score;
 }
 
+
+static PyObject *swalign_fast_smith_waterman(PyObject *self, PyObject *args) {
+    const char *a;
+    const char *b;
+    double max_score = 0;
+    seq_pair problem;
+
+    if (!PyArg_ParseTuple(args, "ss", &a, &b)) {
+        return NULL;
+    }
+
+    problem.a = a;
+    problem.alen = strlen(problem.a);
+    problem.b = b;
+    problem.blen = strlen(problem.b);
+
+    max_score = fast_smith_waterman(&problem, false);
+    return Py_BuildValue("ssd", problem.a, problem.b, max_score);
+}
+
+
+static PyMethodDef swalign_methods[] = {
+        //"PythonName"  C0function name,    argument presentation,  description
+        {"fast_smith_waterman", swalign_fast_smith_waterman, METH_VARARGS, "fast smith waterman return score only"},
+        {NULL, NULL, 0, NULL}  /*Sentinel*/
+};
+
+static struct PyModuleDef swalign = {
+        PyModuleDef_HEAD_INIT,
+        "swalignmodule", /* name of module */
+        "",          /* module documentation, may be NULL */
+        -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+        swalign_methods
+};
+
+PyMODINIT_FUNC
+PyInit_swalign(void) {
+    return PyModule_Create(&swalign);
+//    if (m == NULL) return NULL;
+//    swalignError = PyErr_NewException("swalign.error", NULL, NULL);
+//    Py_INCREF(swalignError);
+//
+//    PyModule_AddObject(m, "error", swalignError);
+}
 
 int main(int argc, const char **argv) {
 

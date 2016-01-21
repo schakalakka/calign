@@ -22,13 +22,13 @@
  *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
-
 #include <float.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 
 #define GAP -1
 #define MATCH 1
@@ -68,3 +68,6 @@ void destroy_matrix(matrix_t S);
 void destroy_seq_pair(seq_pair_t pair);
 
 static seq_pair_t smith_waterman(seq_pair_t problem, bool local);
+
+static int fast_smith_waterman(seq_pair_t problem, bool local);
+
