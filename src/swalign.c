@@ -23,7 +23,6 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <Python.h>
 #include "swalign.h"
 
 
@@ -233,15 +232,18 @@ static seq_pair_t smith_waterman(seq_pair_t problem, bool local) {
     return result;
 }
 
-static int fast_smith_waterman(seq_pair_t problem, bool local) {
+int *fast_smith_waterman(seq_pair_t problem) {
+    seq_pair_t result;
     unsigned int n = problem->alen + 1;
     unsigned int m = problem->blen + 1;
-    int max_score;
+    int *max_score = malloc(sizeof(int) * 3);;
     int score_arr[n + m - 1];
     int curr_val;
     unsigned int i, j;
 
-    max_score = 0;
+    max_score[0] = 0;
+    max_score[1] = 0;
+    max_score[2] = 0;
 
     for (i = 0; i < m + n + 1; i++) {
         score_arr[i] = 0;
@@ -259,7 +261,11 @@ static int fast_smith_waterman(seq_pair_t problem, bool local) {
                                                                         : curr_val;
             curr_val = (curr_val < 0) ? 0 : curr_val;
 
-            max_score = (max_score < curr_val) ? curr_val : max_score;
+            if (max_score[0] < curr_val) {
+                max_score[0] = curr_val;
+                max_score[1] = i;
+                max_score[2] = j;
+            }
 
             score_arr[n - 1 - i + j] = curr_val;
         }
@@ -269,49 +275,7 @@ static int fast_smith_waterman(seq_pair_t problem, bool local) {
 }
 
 
-static PyObject *swalign_fast_smith_waterman(PyObject *self, PyObject *args) {
-    const char *a;
-    const char *b;
-    double max_score = 0;
-    seq_pair problem;
 
-    if (!PyArg_ParseTuple(args, "ss", &a, &b)) {
-        return NULL;
-    }
-
-    problem.a = a;
-    problem.alen = strlen(problem.a);
-    problem.b = b;
-    problem.blen = strlen(problem.b);
-
-    max_score = fast_smith_waterman(&problem, false);
-    return Py_BuildValue("ssd", problem.a, problem.b, max_score);
-}
-
-
-static PyMethodDef swalign_methods[] = {
-        //"PythonName"  C0function name,    argument presentation,  description
-        {"fast_smith_waterman", swalign_fast_smith_waterman, METH_VARARGS, "fast smith waterman return score only"},
-        {NULL, NULL, 0, NULL}  /*Sentinel*/
-};
-
-static struct PyModuleDef swalign = {
-        PyModuleDef_HEAD_INIT,
-        "swalignmodule", /* name of module */
-        "",          /* module documentation, may be NULL */
-        -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
-        swalign_methods
-};
-
-PyMODINIT_FUNC
-PyInit_swalign(void) {
-    return PyModule_Create(&swalign);
-//    if (m == NULL) return NULL;
-//    swalignError = PyErr_NewException("swalign.error", NULL, NULL);
-//    Py_INCREF(swalignError);
-//
-//    PyModule_AddObject(m, "error", swalignError);
-}
 
 int main(int argc, const char **argv) {
 
@@ -323,7 +287,7 @@ int main(int argc, const char **argv) {
     {
         seq_pair problem;
         seq_pair_t result;
-        int max_score;
+        int *max_score;
         char c[strlen(argv[1])], d[strlen(argv[2])];
 
         strcpy(c, argv[1]);
@@ -338,8 +302,8 @@ int main(int argc, const char **argv) {
         //result = smith_waterman(&problem, false);
         //printf("%s\n%s\n", result->a, result->b);
 
-        max_score = fast_smith_waterman(&problem, false);
-        printf("%i\n", max_score);
+        max_score = fast_smith_waterman(&problem);
+        printf("%i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
     }
 
     exit(0);
