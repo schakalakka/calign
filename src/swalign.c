@@ -236,7 +236,7 @@ int *fast_smith_waterman(seq_pair_t problem) {
     seq_pair_t result;
     unsigned int n = problem->alen + 1;
     unsigned int m = problem->blen + 1;
-    int *max_score = malloc(sizeof(int) * 3);;
+    int *max_score = malloc(sizeof(int) * 3);
     int score_arr[n + m - 1];
     int curr_val;
     unsigned int i, j;

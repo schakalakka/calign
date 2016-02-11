@@ -9,7 +9,7 @@
 static PyObject *swalign_fast_smith_waterman(PyObject *self, PyObject *args) {
     const char *a;
     const char *b;
-    entry_t max_score = 0;
+    int *max_score = malloc(sizeof(int) * 3);
     seq_pair problem;
 
     if (!PyArg_ParseTuple(args, "ss", &a, &b)) {
@@ -22,7 +22,7 @@ static PyObject *swalign_fast_smith_waterman(PyObject *self, PyObject *args) {
     problem.blen = strlen(problem.b);
 
     max_score = fast_smith_waterman(&problem);
-    return Py_BuildValue("ssiii", problem.a, problem.b, max_score->score, max_score->prev[0], max_score->prev[1]);
+    return Py_BuildValue("ssiii", problem.a, problem.b, max_score[0], max_score[1], max_score[2]);
 }
 
 
