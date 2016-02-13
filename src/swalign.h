@@ -69,5 +69,14 @@ void destroy_seq_pair(seq_pair_t pair);
 
 static seq_pair_t smith_waterman(seq_pair_t problem, bool local);
 
-int *fast_smith_waterman(seq_pair_t problem);
+int *local_alignment(seq_pair_t problem);
+
+int *semiglobal_alignment(seq_pair_t problem);
+
+int *global_alignment(seq_pair_t problem);
+
+
+int *alignment(seq_pair_t problem, char *str);
+
+
 

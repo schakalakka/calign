@@ -232,33 +232,41 @@ static seq_pair_t smith_waterman(seq_pair_t problem, bool local) {
     return result;
 }
 
-int *fast_smith_waterman(seq_pair_t problem) {
+int *local_alignment(seq_pair_t problem) {
     seq_pair_t result;
     unsigned int n = problem->alen + 1;
     unsigned int m = problem->blen + 1;
     int *max_score = malloc(sizeof(int) * 3);
-    int score_arr[n + m - 1];
+    int score_arr[m];
     int curr_val;
     unsigned int i, j;
+    int last_sub_val;
+    int curr_sub_val;
+    int curr_ins_val;
+    int curr_del_val;
 
     max_score[0] = 0;
     max_score[1] = 0;
     max_score[2] = 0;
 
-    for (i = 0; i < m + n + 1; i++) {
+    for (i = 0; i < m; i++) {
         score_arr[i] = 0;
     }
 
-    for (i = 0; i < n - 1; i++) {
-        for (j = 0; j < m; j++) {
-            int nw_score = (strncmp(problem->a + i, problem->b + j, 1) == 0) ? MATCH : MISMATCH;
+
+    for (i = 1; i < n; i++) {
+        last_sub_val = 0;
+        for (j = 1; j < m; j++) {
+            int nw_score = (strncmp(problem->a + i - 1, problem->b + j - 1, 1) == 0) ? MATCH : MISMATCH;
 
             curr_val = INT_MIN;
 
-            curr_val = (score_arr[n + j - i] < score_arr[n + j - 2 - i]) ? score_arr[n + j - 2 - i] + GAP :
-                       score_arr[n + j - i] + GAP;
-            curr_val = (curr_val < score_arr[n + j - i - 1] + nw_score) ? score_arr[n + j - i - 1] + nw_score
-                                                                        : curr_val;
+            curr_del_val = score_arr[j] + GAP;
+            curr_ins_val = score_arr[j - 1] + GAP;
+            curr_sub_val = last_sub_val + nw_score;
+            curr_val = (curr_ins_val < curr_del_val) ? curr_del_val :
+                       curr_ins_val;
+            curr_val = (curr_val < curr_sub_val) ? curr_sub_val : curr_val;
             curr_val = (curr_val < 0) ? 0 : curr_val;
 
             if (max_score[0] < curr_val) {
@@ -266,14 +274,123 @@ int *fast_smith_waterman(seq_pair_t problem) {
                 max_score[1] = i;
                 max_score[2] = j;
             }
-
-            score_arr[n - 1 - i + j] = curr_val;
+            last_sub_val = score_arr[j];
+            score_arr[j] = curr_val;
         }
-
     }
     return max_score;
 }
 
+int *semiglobal_alignment(seq_pair_t problem) {
+    seq_pair_t result;
+    unsigned int n = problem->alen + 1;
+    unsigned int m = problem->blen + 1;
+    int *max_score = malloc(sizeof(int) * 3);
+    int score_arr[m];
+    int curr_val;
+    unsigned int i, j;
+    int last_sub_val;
+    int curr_sub_val;
+    int curr_ins_val;
+    int curr_del_val;
+
+    max_score[0] = 0;
+    max_score[1] = 0;
+    max_score[2] = 0;
+
+    for (i = 0; i < m; i++) {
+        score_arr[i] = 0;
+    }
+
+    for (i = 1; i < n; i++) {
+        last_sub_val = 0;
+        for (j = 1; j < m; j++) {
+            int nw_score = (strncmp(problem->a + i - 1, problem->b + j - 1, 1) == 0) ? MATCH : MISMATCH;
+
+            curr_val = INT_MIN;
+
+            curr_del_val = score_arr[j] + GAP;
+            curr_ins_val = score_arr[j - 1] + GAP;
+            curr_sub_val = last_sub_val + nw_score;
+            curr_val = (curr_ins_val < curr_del_val) ? curr_del_val :
+                       curr_ins_val;
+            curr_val = (curr_val < curr_sub_val) ? curr_sub_val : curr_val;
+
+            last_sub_val = score_arr[j];
+            score_arr[j] = curr_val;
+        }
+        if (max_score[0] < score_arr[m - 1]) {
+            max_score[0] = score_arr[m - 1];
+            max_score[1] = i;
+            max_score[2] = m - 1;
+        }
+    }
+    for (j = 0; j < m; j++) {
+        if (max_score[0] < score_arr[j]) {
+            max_score[0] = score_arr[j];
+            max_score[1] = n - 1;
+            max_score[2] = j;
+        }
+    }
+    return max_score;
+}
+
+int *global_alignment(seq_pair_t problem) {
+    seq_pair_t result;
+    unsigned int n = problem->alen + 1;
+    unsigned int m = problem->blen + 1;
+    int *max_score = malloc(sizeof(int) * 3);
+    int score_arr[m];
+    int curr_val;
+    unsigned int i, j;
+    int last_sub_val;
+    int curr_sub_val;
+    int curr_ins_val;
+    int curr_del_val;
+
+    max_score[0] = 0;
+    max_score[1] = 0;
+    max_score[2] = 0;
+
+    for (i = 0; i < m; i++) {
+        score_arr[i] = i * GAP;
+    }
+
+    for (i = 1; i < n; i++) {
+        last_sub_val = (i - 1) * GAP;
+        score_arr[0] = i * GAP;
+        for (j = 1; j < m; j++) {
+            int nw_score = (strncmp(problem->a + i - 1, problem->b + j - 1, 1) == 0) ? MATCH : MISMATCH;
+
+            curr_val = INT_MIN;
+
+            curr_del_val = score_arr[j] + GAP;
+            curr_ins_val = score_arr[j - 1] + GAP;
+            curr_sub_val = last_sub_val + nw_score;
+            curr_val = (curr_ins_val < curr_del_val) ? curr_del_val :
+                       curr_ins_val;
+            curr_val = (curr_val < curr_sub_val) ? curr_sub_val : curr_val;
+
+            last_sub_val = score_arr[j];
+            score_arr[j] = curr_val;
+        }
+    }
+    max_score[0] = score_arr[m - 1];
+    max_score[1] = n - 1;
+    max_score[2] = m - 1;
+
+    return max_score;
+}
+
+
+int *alignment(seq_pair_t problem, char *foo) {
+    if (strcmp(foo, "local") == 0) return local_alignment(problem);
+
+    if (strcmp(foo, "semiglobal") == 0) return semiglobal_alignment(problem);
+
+    if (strcmp(foo, "global") == 0) return global_alignment(problem);
+
+}
 
 
 
@@ -300,10 +417,14 @@ int main(int argc, const char **argv) {
         problem.blen = strlen(problem.b);
 
         //result = smith_waterman(&problem, false);
-        //printf("%s\n%s\n", result->a, result->b);
+        //printf("%i\n%i\n", problem.alen, problem.blen);
 
-        max_score = fast_smith_waterman(&problem);
-        printf("%i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
+        max_score = alignment(&problem, "global");
+        printf("Global Alignment:\t %i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
+        max_score = alignment(&problem, "semiglobal");
+        printf("Semiglobal Alignment:\t %i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
+        max_score = alignment(&problem, "local");
+        printf("Local Alignment:\t %i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
     }
 
     exit(0);
