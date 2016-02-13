@@ -34,30 +34,32 @@
 #define MATCH 1
 #define MISMATCH 0
 
-typedef enum { true, false } bool;
+typedef enum {
+    true, false
+} bool;
 
 typedef struct {
-  char *a;
-  unsigned int alen;
-  char *b;
-  unsigned int blen;
+    char *a;
+    unsigned int alen;
+    char *b;
+    unsigned int blen;
 } seq_pair;
 typedef seq_pair *seq_pair_t;
 
 typedef struct {
     int score;
-  unsigned int prev[2];
+    unsigned int prev[2];
 } entry;
 typedef entry *entry_t;
 
 typedef struct {
-  unsigned int m;
-  unsigned int n;
-  entry_t **mat;
+    unsigned int m;
+    unsigned int n;
+    entry_t **mat;
 } matrix;
 typedef matrix *matrix_t;
 
-static char* reverse(char *str);
+static char *reverse(char *str);
 
 static seq_pair_t traceback(seq_pair_t problem, matrix_t S, bool local);
 

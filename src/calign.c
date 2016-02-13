@@ -23,7 +23,7 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "swalign.h"
+#include "calign.h"
 
 
 /* reverse a string in place, return str */
@@ -393,11 +393,10 @@ int *alignment(seq_pair_t problem, char *foo) {
 }
 
 
-
 int main(int argc, const char **argv) {
 
     if (argc != 3) {
-        printf("usage: swalign SEQ1 SEQ2\n");
+        printf("usage: calign SEQ1 SEQ2\n");
         exit(1);
     }
 
