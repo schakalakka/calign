@@ -22,7 +22,7 @@ static PyObject *calign_align(PyObject *self, PyObject *args) {
     problem.b = b;
     problem.blen = strlen(problem.b);
 
-    max_score = alignment(&problem, align_type);
+    max_score = alignment_score(&problem, align_type);
     return Py_BuildValue("ssiii", problem.a, problem.b, max_score[0], max_score[1], max_score[2]);
 }
 

@@ -25,6 +25,7 @@
 
 #include "calign.h"
 
+static int verbose = 0;
 
 /* reverse a string in place, return str */
 static char *reverse(char *str) {
@@ -42,52 +43,78 @@ static char *reverse(char *str) {
 }
 
 // works globally
-static seq_pair_t traceback(seq_pair_t problem, matrix_t S, bool local) {
+static seq_pair_t traceback(seq_pair_t problem, matrix_t S, char *alignment_type) {
     seq_pair_t result = malloc(sizeof(seq_pair));
     unsigned int i = S->m - 1;
     unsigned int j = S->n - 1;
     unsigned int k = 0;
     char c[S->m + S->n + 1];
     char d[S->m + S->n + 1];
+    char e[S->m + S->n + 1]; // shows matches
+
 
     memset(c, '\0', sizeof(c));
     memset(d, '\0', sizeof(d));
+    memset(e, '\0', sizeof(e));
 
-    if (local == true) {
-        unsigned int l, m;
+
+    //find maximum for local alignment i.e. max of total matrix
+    if (strcmp(alignment_type, "local") == 0) {
+        unsigned int l, p;
         double max = FLT_MIN;
-
-        for (l = 0; l < S->m; l++) { //TODO S->m? shouldn't it be n?
-            for (m = 0; m < S->n; m++) {
-                if (S->mat[l][m]->score > max) {
+        for (l = 0; l < S->n; l++) {
+            for (p = 0; p < S->m; p++) {
+                if (S->mat[l][p]->score > max) {
                     i = l;
-                    j = m;
+                    j = p;
                 }
             }
         }
     }
-
-    if (S->mat[i][j]->prev[0] != 0 && S->mat[i][j]->prev[1] != 0) {
-        while (i > 0 || j > 0) {
-            unsigned int new_i = S->mat[i][j]->prev[0];
-            unsigned int new_j = S->mat[i][j]->prev[1];
-
-            if (new_i < i)
-                *(c + k) = *(problem->a + i - 1);
-            else
-                *(c + k) = '-';
-
-            if (new_j < j)
-                *(d + k) = *(problem->b + j - 1);
-            else
-                *(d + k) = '-';
-
-            k++;
-
-            i = new_i;
-            j = new_j;
+    //find maximum of semiglobal alignment i.e. max of last row and last column
+    if (strcmp(alignment_type, "semiglobal") == 0) {
+        unsigned int l, p;
+        double max = FLT_MIN;
+        for (l = 0; l < S->n; l++) {
+            if (S->mat[l][S->m - 1]->score > max) {
+                i = l;
+                j = S->m - 1;
+            }
+        }
+        for (p = 0; p < S->m; p++) {
+            if (S->mat[S->n - 1][p]->score > max) {
+                i = S->n - 1;
+                j = p;
+            }
         }
     }
+
+    unsigned int new_i = S->mat[i][j]->prev[0];
+    unsigned int new_j = S->mat[i][j]->prev[1];
+    while (i - new_i > 0 || j - new_j > 0) {
+        if (new_i < i)
+            *(c + k) = *(problem->a + i - 1);
+        else
+            *(c + k) = '-';
+
+        if (new_j < j)
+            *(d + k) = *(problem->b + j - 1);
+        else
+            *(d + k) = '-';
+
+        if ((new_i < i) && (new_j < j)) //&& (strcmp(problem->a + i - 1, problem->b + j - 1) == 0))
+            *(e + k) = '|';
+        else
+            *(e + k) = ' ';
+
+        k++;
+
+        i = new_i;
+        j = new_j;
+        new_i = S->mat[i][j]->prev[0];
+        new_j = S->mat[i][j]->prev[1];
+    }
+
 
     result->a = malloc(sizeof(char) * k + 1);
     result->b = malloc(sizeof(char) * k + 1);
@@ -97,12 +124,15 @@ static seq_pair_t traceback(seq_pair_t problem, matrix_t S, bool local) {
 
     reverse(c);
     reverse(d);
+    reverse(e);
 
     strcpy(result->a, c);
     strcpy(result->b, d);
 
     result->alen = k;
     result->blen = k;
+
+    printf("%s\n%s\n%s\n", result->a, e, result->b);
 
     return result;
 }
@@ -152,7 +182,7 @@ void destroy_seq_pair(seq_pair_t pair) {
     return;
 }
 
-static seq_pair_t smith_waterman(seq_pair_t problem, bool local) {
+static seq_pair_t alignment(seq_pair_t problem, char *alignment_type) {
     unsigned int m = problem->alen + 1;
     unsigned int n = problem->blen + 1;
     matrix_t S = create_matrix(m, n);
@@ -163,17 +193,35 @@ static seq_pair_t smith_waterman(seq_pair_t problem, bool local) {
     S->mat[0][0]->prev[0] = 0;
     S->mat[0][0]->prev[1] = 0;
 
-    for (i = 1; i <= problem->alen; i++) {
-        S->mat[i][0]->score = 0;
-        S->mat[i][0]->prev[0] = 0;//i - 1;
-        S->mat[i][0]->prev[1] = 0;
+    //global alignment
+    //initialization of the first row and column
+    if (strcmp(alignment_type, "global") == 0) {
+        for (i = 1; i <= problem->alen; i++) {
+            S->mat[i][0]->score = i * GAP;
+            S->mat[i][0]->prev[0] = i - 1;
+            S->mat[i][0]->prev[1] = 0;
+        }
+
+        for (j = 1; j <= problem->blen; j++) {
+            S->mat[0][j]->score = j * GAP;
+            S->mat[0][j]->prev[0] = 0;
+            S->mat[0][j]->prev[1] = j - 1;
+        }
+    }
+    else { //first row and col init for local and semiglobal alignment
+        for (i = 1; i <= problem->alen; i++) {
+            S->mat[i][0]->score = 0;
+            S->mat[i][0]->prev[0] = i;
+            S->mat[i][0]->prev[1] = 0;
+        }
+
+        for (j = 1; j <= problem->blen; j++) {
+            S->mat[0][j]->score = 0;
+            S->mat[0][j]->prev[0] = 0;
+            S->mat[0][j]->prev[1] = j;
+        }
     }
 
-    for (j = 1; j <= problem->blen; j++) {
-        S->mat[0][j]->score = 0;
-        S->mat[0][j]->prev[0] = 0;
-        S->mat[0][j]->prev[1] = 0;//j - 1;
-    }
 
     for (i = 1; i <= problem->alen; i++) {
         for (j = 1; j <= problem->blen; j++) {
@@ -188,7 +236,11 @@ static seq_pair_t smith_waterman(seq_pair_t problem, bool local) {
                     int val;
 
                     if (k == 0 && l == 0) {
-                        continue;
+                        if (strcmp(alignment_type, "local") == 0) {
+                            val = 0;
+                            S->mat[i][j]->score = 0;
+                        }
+                        else continue;
                     } else if (k > 0 && l > 0) {
                         val = nw_score;
                     } else if (k > 0 || l > 0) {
@@ -209,30 +261,32 @@ static seq_pair_t smith_waterman(seq_pair_t problem, bool local) {
         }
     }
 
-    printf("%i\t%i\n", m, n);
-    int x, y;
-    for (x = 0; x < m; ++x) {
-        for (y = 0; y < n; y++) {
-            printf("%d\t", S->mat[x][y]->score);
+    if (verbose != 0) {
+        int x, y;
+        for (x = 0; x < m; ++x) {
+            for (y = 0; y < n; y++) {
+                printf("%d\t", S->mat[x][y]->score);
+            }
+            printf("\n");
         }
-        printf("\n");
+
+        for (x = 0; x < m; ++x) {
+            for (y = 0; y < n; y++) {
+                printf("(%d,%d)\t", S->mat[x][y]->prev[0], S->mat[x][y]->prev[1]);
+            }
+            printf("\n");
+        }
     }
 
-    for (x = 0; x < m; ++x) {
-        for (y = 0; y < n; y++) {
-            printf("(%d,%d)\t", S->mat[x][y]->prev[0], S->mat[x][y]->prev[1]);
-        }
-        printf("\n");
-    }
 
-    result = traceback(problem, S, local);
+    result = traceback(problem, S, &alignment_type);
 
     destroy_matrix(S);
 
     return result;
 }
 
-int *local_alignment(seq_pair_t problem) {
+int *local_alignment_score(seq_pair_t problem) {
     seq_pair_t result;
     unsigned int n = problem->alen + 1;
     unsigned int m = problem->blen + 1;
@@ -281,7 +335,7 @@ int *local_alignment(seq_pair_t problem) {
     return max_score;
 }
 
-int *semiglobal_alignment(seq_pair_t problem) {
+int *semiglobal_alignment_score(seq_pair_t problem) {
     seq_pair_t result;
     unsigned int n = problem->alen + 1;
     unsigned int m = problem->blen + 1;
@@ -335,7 +389,7 @@ int *semiglobal_alignment(seq_pair_t problem) {
     return max_score;
 }
 
-int *global_alignment(seq_pair_t problem) {
+int *global_alignment_score(seq_pair_t problem) {
     seq_pair_t result;
     unsigned int n = problem->alen + 1;
     unsigned int m = problem->blen + 1;
@@ -383,12 +437,12 @@ int *global_alignment(seq_pair_t problem) {
 }
 
 
-int *alignment(seq_pair_t problem, char *foo) {
-    if (strcmp(foo, "local") == 0) return local_alignment(problem);
+int *alignment_score(seq_pair_t problem, char *alignment_type) {
+    if (strcmp(alignment_type, "local") == 0) return local_alignment_score(problem);
 
-    if (strcmp(foo, "semiglobal") == 0) return semiglobal_alignment(problem);
+    if (strcmp(alignment_type, "semiglobal") == 0) return semiglobal_alignment_score(problem);
 
-    if (strcmp(foo, "global") == 0) return global_alignment(problem);
+    if (strcmp(alignment_type, "global") == 0) return global_alignment_score(problem);
 
 }
 
@@ -415,15 +469,21 @@ int main(int argc, const char **argv) {
         problem.b = d;
         problem.blen = strlen(problem.b);
 
-        //result = smith_waterman(&problem, false);
+        //result = alignment(&problem, false);
         //printf("%i\n%i\n", problem.alen, problem.blen);
 
-        max_score = alignment(&problem, "global");
+        max_score = alignment_score(&problem, "global");
         printf("Global Alignment:\t %i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
-        max_score = alignment(&problem, "semiglobal");
+        result = alignment(&problem, "global");
+        max_score = alignment_score(&problem, "semiglobal");
         printf("Semiglobal Alignment:\t %i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
-        max_score = alignment(&problem, "local");
+        result = alignment(&problem, "semiglobal");
+        max_score = alignment_score(&problem, "local");
         printf("Local Alignment:\t %i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
+        result = alignment(&problem, "local");
+
+
+        //printf("Alignment:\t %i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
     }
 
     exit(0);

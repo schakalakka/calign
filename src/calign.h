@@ -61,7 +61,7 @@ typedef matrix *matrix_t;
 
 static char *reverse(char *str);
 
-static seq_pair_t traceback(seq_pair_t problem, matrix_t S, bool local);
+static seq_pair_t traceback(seq_pair_t problem, matrix_t S, char *alignment_type);
 
 static matrix_t create_matrix(unsigned int m, unsigned int n);
 
@@ -69,16 +69,15 @@ void destroy_matrix(matrix_t S);
 
 void destroy_seq_pair(seq_pair_t pair);
 
-static seq_pair_t smith_waterman(seq_pair_t problem, bool local);
+static seq_pair_t alignment(seq_pair_t problem, char *alignment_type);
 
-int *local_alignment(seq_pair_t problem);
+int *local_alignment_score(seq_pair_t problem);
 
-int *semiglobal_alignment(seq_pair_t problem);
+int *semiglobal_alignment_score(seq_pair_t problem);
 
-int *global_alignment(seq_pair_t problem);
+int *global_alignment_score(seq_pair_t problem);
 
-
-int *alignment(seq_pair_t problem, char *str);
+int *alignment_score(seq_pair_t problem, char *alignment_type);
 
 
 
