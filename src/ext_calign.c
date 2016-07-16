@@ -26,6 +26,27 @@ static PyObject *calign_align(PyObject *self, PyObject *args) {
     return Py_BuildValue("ssiii", problem.a, problem.b, max_score[0], max_score[1], max_score[2]);
 }
 
+static PyObject* calign_align_all(PyObject* self, PyObject* args)
+{
+    const char* a;
+    const char* b;
+    const char* align_type; //global, semiglobal=semi-global or local
+    int* max_score = malloc(sizeof(int)*3);
+    seq_pair problem;
+
+    if (!PyArg_ParseTuple(args, "sss", &a, &b, &align_type)) {
+        return NULL;
+    }
+
+    problem.a = a;
+    problem.alen = strlen(problem.a);
+    problem.b = b;
+    problem.blen = strlen(problem.b);
+
+    max_score = alignment_score(&problem, align_type);
+    return Py_BuildValue("ssiii", problem.a, problem.b, max_score[0], max_score[1], max_score[2]);
+}
+
 
 static PyMethodDef pycalign_methods[] = {
         //"PythonName"  C0function name,    argument presentation,  description
