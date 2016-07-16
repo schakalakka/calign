@@ -32,11 +32,11 @@
 
 #define GAP -1
 #define MATCH 1
-#define MISMATCH 0
+#define MISMATCH -1
 
-typedef enum {
-    true, false
-} bool;
+#define BOOL int
+#define FALSE 0
+#define TRUE 1
 
 typedef struct {
     char *a;
@@ -73,11 +73,14 @@ static seq_pair_t alignment(seq_pair_t problem, char *alignment_type);
 
 int *local_alignment_score(seq_pair_t problem);
 
-int *semiglobal_alignment_score(seq_pair_t problem);
+int* semiglobal_alignment_score(seq_pair_t problem, int, int, int, int);
 
 int *global_alignment_score(seq_pair_t problem);
 
 int *alignment_score(seq_pair_t problem, char *alignment_type);
+
+void alignment_score_all(int, const char**, char*);
+
 
 
 
