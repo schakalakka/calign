@@ -29,14 +29,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-#define GAP -1
+#define GAP -500
 #define MATCH 1
-#define MISMATCH -1
+#define MISMATCH -500
 
 #define BOOL int
 #define FALSE 0
 #define TRUE 1
+
+#define TOP TRUE
+#define LEFT FALSE
+#define RIGHT TRUE
+#define BOTTOM TRUE
 
 typedef struct {
     char *a;

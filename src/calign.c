@@ -450,7 +450,7 @@ int* alignment_score(seq_pair_t problem, char* alignment_type)
 {
     if (strcmp(alignment_type, "local")==0) return local_alignment_score(problem);
 
-    if (strcmp(alignment_type, "semiglobal")==0) return semiglobal_alignment_score(problem, 1, 0, 1, 0);
+    if (strcmp(alignment_type, "semiglobal")==0) return semiglobal_alignment_score(problem, TOP, LEFT, RIGHT, BOTTOM);
 
     if (strcmp(alignment_type, "global")==0) return global_alignment_score(problem);
 
@@ -489,15 +489,18 @@ int main(int argc, const char** argv)
     }
 
     {
-        const char* a[3];
-        a[0] = "aaac";
-        a[1] = "caaa";
-        a[2] = "aaac";
-        alignment_score_all(3, a, "semiglobal");
+        const char* a[2];
+        a[0] = "GGATACCGCCTCATCAGCGATAGTCGTAACTCAGCATGGCCGTGTCACATCGGTTGCTGTACAACATCATTGGGCCACGGCTATCGCCGTTTTGGGAAGACCAAAGGCCATAAAAACAGATAATGGGTCCTGCTTCACGTCTAAATCCACGCGAGAGTGGCTCGCGAGA";
+        a[1] = "CCCTTGGTTAGGGTCATTCTGACTAACACTGGGAGTCATCCGGTCAAACAGCGTTCGGTGTATATCACCGCGCTGTTGGACTCTGGAGCGGACATCACTATTATTTCAGAGGAGGATTGGCCCACCGATTGGCCAGTGATGGAGGCCGCGAACCCGCAGATCCATGGGATAGGAGGGGGAATTCCCATGCGAAAAT";
+        //a[2] = "aaac";
+        alignment_score_all(2, a, "semiglobal");
+
+
 
 //        seq_pair problem;
-//        seq_pair_t result;
-//        int* max_score;
+//        int score;
+////        seq_pair_t result;
+////        int* max_score;
 //        char c[strlen(argv[1])], d[strlen(argv[2])];
 //
 //        strcpy(c, argv[1]);
@@ -507,9 +510,9 @@ int main(int argc, const char** argv)
 //        problem.alen = strlen(problem.a);
 //        problem.b = d;
 //        problem.blen = strlen(problem.b);
-
-        //result = alignment(&problem, false);
-        //printf("%i\n%i\n", problem.alen, problem.blen);
+//        score = alignment_score(&problem, "semiglobal");
+////        result = alignment(&problem, false);
+//        printf("%i", score);
 
 //        max_score = alignment_score(&problem, "global");
 //        printf("Global Alignment:\t %i\t%i\t%i\n", max_score[0], max_score[1], max_score[2]);
