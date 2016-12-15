@@ -28,10 +28,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+//#include <sys/param.h>
 
-#define GAP -500
+#define MIN(X, Y) (((X) < (Y) ? (X) : (Y)))
+#define MAX(X, Y) (((X) > (Y) ? (X) : (Y)))
+
+#define GAP -5000
 #define MATCH 1
-#define MISMATCH -500
+#define MISMATCH -5000
 
 #define BOOL int
 #define FALSE 0
@@ -42,6 +46,7 @@
 #define RIGHT TRUE
 #define BOTTOM TRUE
 
+
 typedef struct {
     char *a;
     unsigned int alen;
@@ -50,40 +55,24 @@ typedef struct {
 } seq_pair;
 typedef seq_pair *seq_pair_t;
 
-typedef struct {
-    int score;
-    unsigned int prev[2];
-} entry;
-typedef entry *entry_t;
-
-typedef struct {
-    unsigned int m;
-    unsigned int n;
-    entry_t **mat;
-} matrix;
-typedef matrix *matrix_t;
-
-static char *reverse(char *str);
-
-static seq_pair_t traceback(seq_pair_t problem, matrix_t S, char *alignment_type);
-
-static matrix_t create_matrix(unsigned int m, unsigned int n);
-
-void destroy_matrix(matrix_t S);
 
 void destroy_seq_pair(seq_pair_t pair);
 
 static seq_pair_t alignment(seq_pair_t problem, char *alignment_type);
 
-int *local_alignment_score(seq_pair_t problem);
+int local_alignment_score(seq_pair_t problem);
 
-int* semiglobal_alignment_score(seq_pair_t problem, int, int, int, int);
+int semiglobal_alignment_score(seq_pair_t problem, int, int, int, int);
 
-int *global_alignment_score(seq_pair_t problem);
+int banded_semiglobal_alignment_score(seq_pair_t problem, int, int, int, int, int, int);
 
-int *alignment_score(seq_pair_t problem, char *alignment_type);
+int alignment_score(seq_pair_t problem, char* alignment_type);
 
-void alignment_score_all(int, const char**, char*);
+int alignment_score2(const char*, int, const char*, int);
+
+void alignment_score_all(const char*, int, const char**, char*);
+
+void banded_alignment_score_all(const char*, int len, const char** strings, int, int);
 
 
 

@@ -11,7 +11,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "/home/andreas/GDrive/workspace/calign/lib")
 
 set(SOURCE_FILES src/calign.c src/calign.h)
 
-add_library(sharedcalign SHARED ${SOURCE_FILES})
-add_library(staticcalign STATIC ${SOURCE_FILES})
+add_library(calignshared SHARED ${SOURCE_FILES})
+#add_library(staticcalign STATIC ${SOURCE_FILES})
 add_executable(calign ${SOURCE_FILES})
 
